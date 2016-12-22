@@ -24,6 +24,11 @@ describe 'supports_tls?' do
     expect(ip.supports_tls).to eq(false)
   end
 
+  it 'returns false if any ABBA exists inside of any set of brackets' do
+    ip = IPAddress.new('abcd[bvol]xyyx[erre]papwe')
+    expect(ip.supports_tls).to eq(false)
+  end
+
   it 'returns false if IP has no ABBA' do
     ip = IPAddress.new('abcd[bdce]xzyp')
     expect(ip.supports_tls).to eq(false)

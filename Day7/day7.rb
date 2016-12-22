@@ -1,27 +1,27 @@
 class IPAddress
-  attr_reader :hypernet, :sequences
+  attr_reader :hypernets, :sequences
 
   def initialize(address)
-    @sequences = address.partition(/\[.*\]/)
-    @hypernet = sequences[1]
+    @sequences = address.gsub(/\[.*\]/, ',').split(',')
+    @hypernets = address.scan(/\[\w+\]/)
   end
 
   def supports_tls
-    puts sequences
-    # some strings have more than one hypernet!
-    return false if matches_pattern(hypernet)
-    matches_pattern(sequences[0]) || matches_pattern(sequences[2])
+    hypernets.none? {|h| matches_pattern(h)} && sequences.any? {|s| matches_pattern(s)}
   end
 
   private
 
   def is_abba(s)
-    s[0] == s[3] && s[1] == s[2] && !(s[0] == s[1])
+    s[0] == s[3] && s[1] == s[2] && s[0] != s[1]
   end
 
-  def matches_pattern(s)
-    s.chars.each_index do |i|
-      return true if is_abba(s[i..i+3])
+  def matches_pattern(sequence)
+    return false if sequence.length < 4
+    i = 0
+    while i + 3 < sequence.length
+      return true if is_abba(sequence[i..i+3])
+      i += 1
     end
     return false
   end
@@ -31,11 +31,11 @@ class IPChecker
   attr_reader :addresses
 
   def initialize(filename)
-    @addresses = IO.readlines(filename).map {|a| IPAddress.new(a)}
+    @addresses = IO.readlines(filename).map {|a| IPAddress.new(a.chomp)}
   end
 
   def tls_supportive_ip_count
-    addresses.count {|a| p a.supports_tls}
+    addresses.count {|a| a.supports_tls}
   end
 end
 
